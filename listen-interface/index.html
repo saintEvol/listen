@@ -15,6 +15,32 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Buffer polyfill
+      window.global = window;
+      window.process = { env: {} };
+      
+      // Simple Buffer polyfill
+      if (typeof window.Buffer === 'undefined') {
+        window.Buffer = {
+          from: function(data, encoding) {
+            if (typeof data === 'string') {
+              return new Uint8Array(new TextEncoder().encode(data));
+            }
+            return new Uint8Array(data);
+          },
+          alloc: function(size) {
+            return new Uint8Array(size);
+          },
+          allocUnsafe: function(size) {
+            return new Uint8Array(size);
+          },
+          isBuffer: function(obj) {
+            return obj instanceof Uint8Array;
+          }
+        };
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
     <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
   </body>

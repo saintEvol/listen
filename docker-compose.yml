@@ -1,39 +1,39 @@
 services:
-  indexer:
-    image: listen-indexer
-    build:
-      context: ./listen-data
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    volumes:
-      - .env:/app/.env
-    environment:
-      - REDIS_URL=redis://redis:6379
-      - CLICKHOUSE_URL=http://clickhouse:8123
-      - CLICKHOUSE_USER=default
-      - CLICKHOUSE_PASSWORD=default
-      - CLICKHOUSE_DATABASE=default
-    depends_on:
-      redis:
-        condition: service_healthy
-      clickhouse:
-        condition: service_healthy
+  # indexer:
+  #   image: listen-indexer
+  #   build:
+  #     context: .
+  #     dockerfile: listen-data/Dockerfile
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - .env:/app/.env
+  #   environment:
+  #     - REDIS_URL=redis://redis:6379
+  #     - CLICKHOUSE_URL=http://clickhouse:8123
+  #     - CLICKHOUSE_USER=default
+  #     - CLICKHOUSE_PASSWORD=default
+  #     - CLICKHOUSE_DATABASE=default
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #     clickhouse:
+  #       condition: service_healthy
 
-  adapter:
-    image: listen-adapter
-    build:
-      context: ./listen-adapter
-      dockerfile: Dockerfile
-    environment:
-      - REDIS_URL=redis://redis:6379
-      - HOST=0.0.0.0
-      - PORT=6968
-    ports:
-      - 6968:6968
-    depends_on:
-      redis:
-        condition: service_healthy
+  # adapter:
+  #   image: listen-adapter
+  #   build:
+  #     context: .
+  #     dockerfile: listen-adapter/Dockerfile
+  #   environment:
+  #     - REDIS_URL=redis://redis:6379
+  #     - HOST=0.0.0.0
+  #     - PORT=6968
+  #   ports:
+  #     - 6968:6968
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
 
   redis:
     build:
@@ -104,6 +104,22 @@ services:
       - 9090:9090
     volumes:
       - ./listen-engine/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  frontend:
+    build:
+      context: ./listen-interface
+      dockerfile: Dockerfile
+    ports:
+      - 8080:4173
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:6968
+    depends_on:
+      - redis
+      - clickhouse
+    volumes:
+      - ./listen-interface:/app
+      - /app/node_modules
 
   # this is not ran, would require tweaking the config
   nginx:

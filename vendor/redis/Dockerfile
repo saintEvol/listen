@@ -1,7 +1,7 @@
-FROM redis:latest
+FROM alpine:latest
 
-# Install envsubst
-RUN apt-get update && apt-get install -y gettext-base && rm -rf /var/lib/apt/lists/*
+# Install Redis
+RUN apk add --no-cache redis
 
 # Copy your redis.conf as a template
 COPY redis.conf /usr/local/etc/redis/redis.conf.template

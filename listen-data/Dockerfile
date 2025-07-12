@@ -1,17 +1,22 @@
-FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
+FROM rust:latest AS builder
 WORKDIR /app
 
-FROM chef AS planner
-COPY . .
-RUN cargo chef prepare --recipe-path recipe.json
+# 复制 Cargo 文件
+COPY listen-data/Cargo.toml listen-data/Cargo.lock ./
+COPY listen-tracing/Cargo.toml listen-tracing/Cargo.lock ./
 
-FROM chef AS builder
-COPY --from=planner /app/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
-COPY . .
+# 创建虚拟项目以缓存依赖
+RUN mkdir src && \
+    echo "fn main() {}" > src/main.rs && \
+    cargo build --release && \
+    rm -rf src
+
+# 复制源代码
+COPY listen-data/src ./src
+COPY listen-tracing/src ./listen-tracing/src
+
+# 构建项目
 RUN cargo build --release --bin indexer
-
-EXPOSE 6969
 
 FROM debian:bookworm-slim AS runtime
 
